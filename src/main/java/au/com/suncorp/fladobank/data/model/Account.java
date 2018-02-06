@@ -1,5 +1,7 @@
 package au.com.suncorp.fladobank.data.model;
 
+import au.com.suncorp.fladobank.data.InsufficientFundsAccountException;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -112,13 +114,11 @@ public final class Account extends BaseEntity {
      * Deposit money into this account.
      * @param amount
      * @param fromAccount optional bank account is deposit is done from another account
+     * @return transaction id
      */
-    public void deposit(BigDecimal amount, Optional<Account> fromAccount) {
-        if (Objects.isNull(amount) || Objects.isNull(fromAccount)) {
+    public Long deposit(BigDecimal amount, Optional<Account> fromAccount) {
+        if (Objects.isNull(amount) || Objects.isNull(fromAccount) || amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException();
-        }
-        if (amount.compareTo(BigDecimal.ZERO) < 0) { //do not handle negative amounts
-            return;
         }
         Transaction creditTxn = new Transaction(amount, Transaction.TransactionType.CREDIT, fromAccount, Optional.of(this));
         lock.lock();
@@ -128,31 +128,35 @@ public final class Account extends BaseEntity {
         } finally {
             lock.unlock();
         }
+        return creditTxn.getId();
     }
 
     /**
      * Withdraw money from this account.
+     *
      * @param amount
      * @param toAccount optional bank account if money are withdrawn in another account
+     * @return transaction id for this account
      */
-    public void widthdraw(BigDecimal amount, Optional<Account> toAccount) {
+    public Long widthdraw(BigDecimal amount, Optional<Account> toAccount) {
         if (Objects.isNull(amount) || Objects.isNull(toAccount)) {
             throw new IllegalArgumentException();
         }
         if (amount.compareTo(BigDecimal.ZERO) < 0) { //do not handle negative amounts
-            return;
+            throw new InsufficientFundsAccountException();
         }
         Transaction debitTxn = new Transaction(amount, Transaction.TransactionType.DEBIT, Optional.of(this), toAccount);
         lock.lock();
         try {
             if (this.balance.compareTo(amount) < 0) { //do not handle if insufficient funds
-                return;
+                throw new InsufficientFundsAccountException();
             }
             this.transactions.add(debitTxn);
             this.balance = balance.subtract(amount);
         } finally {
             lock.unlock();
         }
+        return debitTxn.getId();
     }
 
     /**
@@ -160,11 +164,13 @@ public final class Account extends BaseEntity {
      *
      * @param amount amount to be transferred
      * @param toAccount destination account
+     * @return transaction id for this account
      */
-    public void transfer(BigDecimal amount, Account toAccount) {
+    public Long transfer(BigDecimal amount, Account toAccount) {
         if (Objects.isNull(amount) || Objects.isNull(toAccount)) {
             throw new IllegalArgumentException();
         }
+        Long txnId;
         //lock accounts always in same order to avoid deadlock (order by account.id)
         Lock firstLock = this.getId() < toAccount.getId() ? this.lock : toAccount.lock;
         Lock secondLock = this.getId() > toAccount.getId() ? toAccount.lock : this.lock;
@@ -172,12 +178,13 @@ public final class Account extends BaseEntity {
         firstLock.lock();
         secondLock.lock();
         try {
-            this.widthdraw(amount, Optional.of(toAccount));
+            txnId = this.widthdraw(amount, Optional.of(toAccount));
             toAccount.deposit(amount, Optional.of(this));
         } finally {
             secondLock.unlock();
             firstLock.unlock();
         }
+        return txnId;
     }
 
     /**

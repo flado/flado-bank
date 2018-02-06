@@ -1,5 +1,6 @@
 package au.com.suncorp.fladobank.data.model;
 
+import au.com.suncorp.fladobank.data.InsufficientFundsAccountException;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -31,8 +32,9 @@ public class AccountTest {
 
     @Test
     public void testDeposit() {
-        account.deposit(BigDecimal.valueOf(100), Optional.empty());
-
+        Long txnId = account.deposit(BigDecimal.valueOf(100), Optional.empty());
+        assertNotNull(txnId);
+        assertTrue(txnId > 0);
         assertEquals(BigDecimal.valueOf(100), account.getBalance());
         assertEquals(1, account.getTransactions().size());
         assertEquals(BigDecimal.valueOf(100), account.getTransactions().get(0).getAmount());
@@ -44,15 +46,18 @@ public class AccountTest {
         assertEquals(LocalDate.now(), account.getTransactions().get(0).getDate().toLocalDate());
     }
 
+    @Test(expected = InsufficientFundsAccountException.class)
+    public void testWithdrawalWhenInsufficientFunds() {
+        account.widthdraw(BigDecimal.valueOf(200), Optional.empty());
+    }
+
     @Test
     public void testWithdrawal() {
-        account.widthdraw(BigDecimal.valueOf(200), Optional.empty());
-        //ignore transaction if insufficient funds
-        assertEquals(BigDecimal.ZERO, account.getBalance());
-        assertEquals(0, account.getTransactions().size());
+        Long depositTxnId = account.deposit(BigDecimal.valueOf(500), Optional.empty());
+        assertTrue(depositTxnId > 0);
 
-        account.deposit(BigDecimal.valueOf(500), Optional.empty());
-        account.widthdraw(BigDecimal.valueOf(200), Optional.empty());
+        Long withdrawTxnId = account.widthdraw(BigDecimal.valueOf(200), Optional.empty());
+        assertTrue(withdrawTxnId > 0);
 
         assertEquals(BigDecimal.valueOf(300), account.getBalance());
         assertEquals(2, account.getTransactions().size());
@@ -69,6 +74,25 @@ public class AccountTest {
 
     @Test
     public void testTransfer() {
-        //TODO:
+        account.deposit(BigDecimal.valueOf(15), Optional.empty());
+
+        Account toAccount = new Account(new Customer("first", "last", LocalDate.of(1977, 4, 4)), Account.AccountType.DEPOSIT);
+        account.transfer(BigDecimal.valueOf(5), toAccount);
+
+        assertEquals(BigDecimal.valueOf(10), account.getBalance());
+        assertEquals(2, account.getTransactions().size());
+        Transaction txn = toAccount.getTransactions().get(1);
+        assertTrue(txn.getToAccount().isPresent());
+        assertEquals(toAccount.getId(), txn.getToAccount().get().getId());
+        assertEquals(BigDecimal.valueOf(5), txn.getAmount());
+        assertEquals(Transaction.TransactionType.DEBIT, txn.getType());
+
+        assertEquals(BigDecimal.valueOf(5), toAccount.getBalance());
+        assertEquals(1, toAccount.getTransactions().size());
+        txn = toAccount.getTransactions().get(0);
+        assertTrue(txn.getFromAccount().isPresent());
+        assertEquals(account.getId(), txn.getFromAccount().get().getId());
+        assertEquals(BigDecimal.valueOf(5), txn.getAmount());
+        assertEquals(Transaction.TransactionType.CREDIT, txn.getType());
     }
 }

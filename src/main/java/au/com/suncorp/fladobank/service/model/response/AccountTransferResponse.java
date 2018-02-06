@@ -1,7 +1,5 @@
 package au.com.suncorp.fladobank.service.model.response;
 
-import au.com.suncorp.fladobank.service.model.response.AccountBalanceResponse;
-
 import java.util.Objects;
 
 /**
@@ -9,11 +7,11 @@ import java.util.Objects;
  */
 public final class AccountTransferResponse {
 
-    private final AccountBalanceResponse fromAccount;
-    private final AccountBalanceResponse toAccount;
+    private final AccountResponse fromAccount;
+    private final AccountResponse toAccount;
 
 
-    public AccountTransferResponse(AccountBalanceResponse fromAccount, AccountBalanceResponse toAccount) {
+    public AccountTransferResponse(AccountResponse fromAccount, AccountResponse toAccount) {
         if (Objects.isNull(fromAccount) || Objects.isNull(toAccount)) {
             throw new IllegalArgumentException();
         }
@@ -21,11 +19,11 @@ public final class AccountTransferResponse {
         this.toAccount = toAccount;
     }
 
-    public AccountBalanceResponse getToAccount() {
+    public AccountResponse getToAccount() {
         return toAccount;
     }
 
-    public AccountBalanceResponse getFromAccount() {
+    public AccountResponse getFromAccount() {
         return fromAccount;
     }
 }

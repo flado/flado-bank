@@ -4,12 +4,10 @@ import au.com.suncorp.fladobank.data.BankDataSource;
 import au.com.suncorp.fladobank.data.model.Account;
 import au.com.suncorp.fladobank.data.model.Customer;
 import au.com.suncorp.fladobank.service.error.AccountNotFoundException;
-import au.com.suncorp.fladobank.service.error.CustomerNotFoundException;
 import au.com.suncorp.fladobank.service.error.InsufficientFundsException;
 import au.com.suncorp.fladobank.service.model.request.OpenAccountRequest;
-import au.com.suncorp.fladobank.service.model.response.AccountBalanceResponse;
+import au.com.suncorp.fladobank.service.model.response.AccountResponse;
 import au.com.suncorp.fladobank.service.model.response.AccountTransferResponse;
-import au.com.suncorp.fladobank.service.model.response.OpenAccountResponse;
 import au.com.suncorp.fladobank.service.model.response.TransactionResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,16 +38,15 @@ public class FladoBankServiceImpl implements FladoBankService {
      *
      * @param customer
      * @param type
-     * @return
+     * @return account number
      */
-    private OpenAccountResponse openAccount(Customer customer, Account.AccountType type) {
+    private Long openAccount(Customer customer, Account.AccountType type) {
         Account acc = bankDataSource.createAccount(customer, type);
-        return
-                new OpenAccountResponse(acc.getId(), acc.getBalance(), acc.getCreationDate(), acc.getCustomer().getId());
+        return acc.getId();
     }
 
     @Override
-    public OpenAccountResponse openAccount(OpenAccountRequest openAccountRequest) {
+    public Long openAccount(OpenAccountRequest openAccountRequest) {
         if (Objects.isNull(openAccountRequest)) {
             throw new IllegalArgumentException();
         }
@@ -59,20 +56,7 @@ public class FladoBankServiceImpl implements FladoBankService {
     }
 
     @Override
-    public OpenAccountResponse openAccount(Long customerId, String accountType) throws CustomerNotFoundException {
-        if (Objects.isNull(customerId) || Objects.isNull(accountType)) {
-            throw new IllegalArgumentException();
-        }
-        Customer customer = bankDataSource.getCustomer(customerId);
-        if (customer == null) {
-            throw new CustomerNotFoundException();
-        }
-        return
-                openAccount(customer, Account.AccountType.valueOf(accountType));
-    }
-
-    @Override
-    public AccountBalanceResponse getBalance(Long accountNumber) throws AccountNotFoundException {
+    public AccountResponse getAccount(Long accountNumber) throws AccountNotFoundException {
         if (Objects.isNull(accountNumber)) {
             throw new IllegalArgumentException();
         }
@@ -81,11 +65,11 @@ public class FladoBankServiceImpl implements FladoBankService {
             throw new AccountNotFoundException();
         }
         return
-                new AccountBalanceResponse(account.getId(), account.getBalance());
+                new AccountResponse(account);
     }
 
     @Override
-    public AccountBalanceResponse deposit(Long accountNumber, BigDecimal amount) throws AccountNotFoundException {
+    public Long deposit(Long accountNumber, BigDecimal amount) throws AccountNotFoundException {
         if (Objects.isNull(accountNumber) || Objects.isNull(amount)) {
             throw new IllegalArgumentException();
         }
@@ -93,13 +77,12 @@ public class FladoBankServiceImpl implements FladoBankService {
         if (Objects.isNull(account)) {
             throw new AccountNotFoundException();
         }
-        account.deposit(amount, Optional.empty());
         return
-                new AccountBalanceResponse(account.getId(), account.getBalance());
+                account.deposit(amount, Optional.empty());
     }
 
     @Override
-    public AccountBalanceResponse withdraw(Long accountNumber, BigDecimal amount) throws AccountNotFoundException, InsufficientFundsException {
+    public Long withdraw(Long accountNumber, BigDecimal amount) throws AccountNotFoundException, InsufficientFundsException {
         if (Objects.isNull(accountNumber) || Objects.isNull(amount)) {
             throw new IllegalArgumentException();
         }
@@ -110,13 +93,12 @@ public class FladoBankServiceImpl implements FladoBankService {
         if (account.getBalance().compareTo(amount) < 0) {
             throw new InsufficientFundsException();
         }
-        account.widthdraw(amount, Optional.empty());
         return
-                new AccountBalanceResponse(account.getId(), account.getBalance());
+                account.widthdraw(amount, Optional.empty());
     }
 
     @Override
-    public AccountTransferResponse transfer(Long fromAccountId, Long toAccountId, BigDecimal amount) throws AccountNotFoundException, InsufficientFundsException {
+    public Long transfer(Long fromAccountId, Long toAccountId, BigDecimal amount) throws AccountNotFoundException, InsufficientFundsException {
         if (Objects.isNull(fromAccountId) || Objects.isNull(toAccountId) || Objects.isNull(amount)) {
             throw new IllegalArgumentException();
         }
@@ -128,16 +110,12 @@ public class FladoBankServiceImpl implements FladoBankService {
         if (fromAccount.getBalance().compareTo(amount) < 0) {
             throw new InsufficientFundsException();
         }
-        fromAccount.transfer(amount, toAccount);
         return
-                new AccountTransferResponse(
-                        new AccountBalanceResponse(fromAccount.getId(), fromAccount.getBalance()),
-                        new AccountBalanceResponse(toAccount.getId(), toAccount.getBalance())
-                );
+                fromAccount.transfer(amount, toAccount);
     }
 
     @Override
-    public List<TransactionResponse> getTransations(Long accountNumber) throws AccountNotFoundException {
+    public List<TransactionResponse> getTransactions(Long accountNumber) throws AccountNotFoundException {
         if (Objects.isNull(accountNumber)) {
             throw new IllegalArgumentException();
         }
@@ -147,7 +125,7 @@ public class FladoBankServiceImpl implements FladoBankService {
         }
         return
                 account.getTransactions().stream()
-                        .map(txn -> new TransactionResponse(txn))
+                        .map(TransactionResponse::new)
                         .collect(Collectors.toList());
     }
 }

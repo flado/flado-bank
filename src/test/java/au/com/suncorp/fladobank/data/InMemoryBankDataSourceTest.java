@@ -42,7 +42,6 @@ public class InMemoryBankDataSourceTest {
         Account newAccount = dataSource.createAccount(firstCustomer, Account.AccountType.DEPOSIT);
         Account acc = dataSource.getAccount(newAccount.getId());
         assertTrue(dataSource.getNoOfAccounts() == 1);
-        assertTrue(dataSource.getNoOfCustomers() == 1);
         assertNotNull(acc);
         assertEquals(BigDecimal.ZERO, acc.getBalance() );
         assertTrue(acc.getTransactions().size() == 0);
@@ -53,7 +52,6 @@ public class InMemoryBankDataSourceTest {
         newAccount = dataSource.createAccount(firstCustomer, Account.AccountType.SAVINGS);
         acc = dataSource.getAccount(newAccount.getId());
         assertTrue(dataSource.getNoOfAccounts() == 2);
-        assertTrue(dataSource.getNoOfCustomers() == 1);
         assertNotNull(acc);
         assertEquals(BigDecimal.ZERO, acc.getBalance() );
         assertTrue(acc.getTransactions().size() == 0);
@@ -64,7 +62,6 @@ public class InMemoryBankDataSourceTest {
         newAccount = dataSource.createAccount(newCustomer(), Account.AccountType.DEPOSIT);
         acc = dataSource.getAccount(newAccount.getId());
         assertTrue(dataSource.getNoOfAccounts() == 3);
-        assertTrue(dataSource.getNoOfCustomers() == 2);
         assertNotNull(acc);
         assertEquals(BigDecimal.ZERO, acc.getBalance() );
         assertTrue(acc.getTransactions().size() == 0);

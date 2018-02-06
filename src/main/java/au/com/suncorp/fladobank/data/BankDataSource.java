@@ -24,11 +24,4 @@ public interface BankDataSource {
      */
     Account getAccount(Long accountId);
 
-    /**
-     * retrive an existing customer
-     * @param customerId
-     * @return existing customer or null if customer is not found
-     */
-    Customer getCustomer(Long customerId);
-
 }
