@@ -181,12 +181,14 @@ Implement a Maven-based project acting as a very limited, thread-safe, bank-in-a
 ## Solution Overview
 
 Designing this solution I've made the following assumptions & choices:
- 
+
+- fladobank implementation requires Java 8 
 - a deposit/withdrawal is actually a transaction on a single account
 - a transfer is made on two accounts ( deposit on destination account & withdrawal on source account)
 - each account maintains it's own list of immutable transactions
 - internal model is hidden from clients by using the `FladoBankService` facade
 - even if the internal `Account` implementation is thread-safe, the bank clients must use the `FladoBankService` facade only
+- the `FladoBankService` facade is exposed as a `@Service` Spring bean 
 
 ## Compile, test and generate the library 
 
