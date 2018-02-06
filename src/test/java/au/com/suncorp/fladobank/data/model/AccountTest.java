@@ -81,7 +81,7 @@ public class AccountTest {
 
         assertEquals(BigDecimal.valueOf(10), account.getBalance());
         assertEquals(2, account.getTransactions().size());
-        Transaction txn = toAccount.getTransactions().get(1);
+        Transaction txn = account.getTransactions().get(1);
         assertTrue(txn.getToAccount().isPresent());
         assertEquals(toAccount.getId(), txn.getToAccount().get().getId());
         assertEquals(BigDecimal.valueOf(5), txn.getAmount());
