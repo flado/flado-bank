@@ -1,4 +1,6 @@
-# FLADO bank (interview test @ Suncorp group: https://www.suncorp.com.au/)
+# FLADO bank
+
+### API's Team - interview test @ Suncorp group: https://www.suncorp.com.au
 
 For the following operations, please design a set of endpoint/verb combinations that would neatly model the scenario with a RESTful approach.
 
@@ -26,7 +28,7 @@ Where:
 
 ## Overview
 
-For simplicity I consider the customer identification is done 
+For simplicity I consider the customer identification is done
 through a 3rd party authentication & authorization mechanism (eg: OAuth2)
 
 ### Security assumption
@@ -34,7 +36,7 @@ through a 3rd party authentication & authorization mechanism (eg: OAuth2)
 The `/fladobank/api` must be secured:
 
 * must be exposed only over HTTPS
-* must have a security token mechanism in place (eg. OAuth) for authorization purposes; the security token can be send for each request in the HTTP Authorization header. The token can be generated on a 3rd party service and can include permissions as well as a custom TTL (time-to-live). Each API must check the token for validity before stating the operation requested. In case the token is not valid, the APIs can return HTTP 401 Unauthorized as described below. 
+* must have a security token mechanism in place (eg. OAuth) for authorization purposes; the security token can be send for each request in the HTTP Authorization header. The token can be generated on a 3rd party service and can include permissions as well as a custom TTL (time-to-live). Each API must check the token for validity before stating the operation requested. In case the token is not valid, the APIs can return HTTP 401 Unauthorized as described below.
 
 ### Generic response codes
 For almost any REST endpoint, in case of an unsuccessful operation, we can return some error HTTP status codes (depending on the situation/operation):
@@ -62,10 +64,10 @@ Below I describe the APIs on success and other scenarios not covered by the HTTP
 
 #### Request:
 ```
-	HTTP POST /fladobank/api/v1/accounts, 
+	HTTP POST /fladobank/api/v1/accounts,
 	Content-Type: application/json
 	Body: { 'firstName': 'Florin', 'lastName': 'Adochiei', dob: '07/11/1978', 'accountType': 'Deposit' }
-``` 
+```
 #### Response:
 
 ```
@@ -87,7 +89,7 @@ Below I describe the APIs on success and other scenarios not covered by the HTTP
 ```
     Content-Type: application/json
 	HTTP POST /fladobank/api/v1/accounts/{accountNumber}/transactions, Body: { 'amount': 200, 'txnType': 'credit' }
-``` 
+```
 
 ### Response:
 
@@ -109,7 +111,7 @@ Below I describe the APIs on success and other scenarios not covered by the HTTP
 ```
     Content-Type: application/json
 	HTTP POST /fladobank/api/v1/account/{accountNumber}/transactions, Body: { 'amount': 200, 'txnType': 'debit' }
-``` 
+```
 ### Response:
 
 ```
@@ -117,15 +119,15 @@ Below I describe the APIs on success and other scenarios not covered by the HTTP
 	HTTP 201 Created, Response Body: none
 	HTTP 400 Bad Request, Body: { 'message', 'invalid request' }
 	HTTP 404 Not Found, Body: { 'message', 'account not found' }
-	HTTP 409 Conflict, Response Body: { 'message': 'insufficient funds'}	
+	HTTP 409 Conflict, Response Body: { 'message': 'insufficient funds'}
 ```
 
-## 4. Make a payment to another account 
+## 4. Make a payment to another account
 
 ### Request:
 ```
 	HTTP POST /fladobank/api/v1/account/{accountNumber}/transactions, Body: { 'amount': 200, 'toAccount': 563626 }
-``` 
+```
 ### Response:
 ```
     Location: /fladobank/api/v1/accounts/{accountNumber}/transactions/{transactionId}
@@ -135,19 +137,19 @@ Below I describe the APIs on success and other scenarios not covered by the HTTP
 	HTTP 409 Conflict, Response Body: { error: 'insufficient funds' }
 ```
 
-## 4. View Transactions 
+## 4. View Transactions
 
 ### Request:
 ```
 	HTTP GET /fladobank/api/v1/account/{accountNumber}/transactions?[pageNumber={pageNumber}]&[pageSize={pageSize}]
-``` 
+```
 * pageNumber & pageSize query parameters are optional. The service implementation could use a default value for pageSize and always return first page + total number of transactions
 
 ### Response:
 ```
 	HTTP 200 OK, Body:
-	{ 
-		'accountNumber': '{accountNumber}', 
+	{
+		'accountNumber': '{accountNumber}',
 	  	'transactions': [
 			{ 'txnId': '23361123', 'txnType': 'debit', 'amount': 100, 'date': '2018-02-12 11:04:00', 'fromAccountId': {accountNumber}, 'toAccount' : 2332323 },
 			{ 'txnId': '289323666', 'txnType': 'credit', 'amount': 50, 'date': '2018-03-13 09:32:11', 'fromAccountId': 12455336, 'toAccount' : {accountNumber}  },
@@ -156,7 +158,7 @@ Below I describe the APIs on success and other scenarios not covered by the HTTP
 		'pageNumber': 1,
 		'pageSize': 100,
 		'size': 1200,
-		
+
 	}
 	HTTP 400 Bad Request, Body: { 'message', 'invalid request' }
 	HTTP 404 Not Found, Body: { 'message', 'account not found' }
@@ -180,15 +182,15 @@ Implement a Maven-based project acting as a very limited, thread-safe, bank-in-a
 
 Designing this solution I've made the following assumptions & choices:
 
-- fladobank implementation requires Java 8 
+- fladobank implementation requires Java 8
 - a deposit/withdrawal is actually a transaction on a single account
 - a transfer is made on two accounts ( deposit on destination account & withdrawal on source account)
 - each account maintains it's own list of immutable transactions
 - internal model is hidden from clients by using the `FladoBankService` facade
 - even if the internal `Account` implementation is thread-safe, the bank clients must use the `FladoBankService` facade only
-- the `FladoBankService` facade is exposed as a `@Service` Spring bean 
+- the `FladoBankService` facade is exposed as a `@Service` Spring bean
 
-## Compile, test and generate the library 
+## Compile, test and generate the library
 
 ```
     $ mvn clean install
