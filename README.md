@@ -1,8 +1,6 @@
-## Suncorp Technical Test - Florin Adochiei - 06/02/2018
- 
-# Question 1
-For the following operations, please design a set of endpoint/verb combinations 
-that would neatly model the scenario with a RESTful approach.
+# FLADO bank (interview test @ Suncorp group: https://www.suncorp.com.au/)
+
+For the following operations, please design a set of endpoint/verb combinations that would neatly model the scenario with a RESTful approach.
 
 NB: No need to do any actual coding here,
  just document the API in a Word or text file.
