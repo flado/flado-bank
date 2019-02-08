@@ -1,6 +1,6 @@
 # FLADO bank
 
-### API's Team - interview test @ Suncorp group: https://www.suncorp.com.au
+### Requirements
 
 For the following operations, please design a set of endpoint/verb combinations that would neatly model the scenario with a RESTful approach.
 
